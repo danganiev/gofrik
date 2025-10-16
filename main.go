@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -18,16 +19,25 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+	ctx := context.Background()
+	if err := run(ctx, os.Getenv, os.Stdout, os.Stderr, os.Args); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
+func run(
+	ctx context.Context,
+	getenv func(string) string,
+	stdout, stderr io.Writer,
+	args []string,
+) error {
 	// Create context that listens for interrupt signals
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer cancel()
+
+	// Create logger that writes to stdout
+	logger := log.New(stdout, "", log.LstdFlags)
 
 	// Load configuration
 	config := api.LoadConfig()
@@ -43,7 +53,7 @@ func run() error {
 	if err := database.Migrate(db); err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
-	log.Println("Database migrations completed")
+	logger.Println("Database migrations completed")
 
 	// Initialize storage (if configured)
 	var storageClient *storage.Storage
@@ -51,13 +61,13 @@ func run() error {
 	if storageConfig.Bucket != "" {
 		storageClient, err = storage.NewStorage(storageConfig)
 		if err != nil {
-			log.Printf("Warning: Failed to initialize storage: %v", err)
-			log.Printf("File upload will not be available")
+			logger.Printf("Warning: Failed to initialize storage: %v", err)
+			logger.Printf("File upload will not be available")
 		} else {
-			log.Printf("Storage initialized: %s (bucket: %s)", storageConfig.Provider, storageConfig.Bucket)
+			logger.Printf("Storage initialized: %s (bucket: %s)", storageConfig.Provider, storageConfig.Bucket)
 		}
 	} else {
-		log.Printf("Storage not configured. Set STORAGE_BUCKET to enable file uploads")
+		logger.Printf("Storage not configured. Set STORAGE_BUCKET to enable file uploads")
 	}
 
 	// Create server with all dependencies
@@ -78,16 +88,16 @@ func run() error {
 
 	// Start server in a goroutine
 	go func() {
-		log.Printf("Starting Gofrik GraphQL server on %s", httpServer.Addr)
-		log.Printf("GraphQL endpoint: http://localhost:%s/graphql", config.Port)
-		log.Printf("GraphiQL playground: http://localhost:%s/graphql", config.Port)
-		log.Printf("Health check: http://localhost:%s/health", config.Port)
+		logger.Printf("Starting Gofrik GraphQL server on %s", httpServer.Addr)
+		logger.Printf("GraphQL endpoint: http://localhost:%s/graphql", config.Port)
+		logger.Printf("GraphiQL playground: http://localhost:%s/graphql", config.Port)
+		logger.Printf("Health check: http://localhost:%s/health", config.Port)
 		if storageClient != nil {
-			log.Printf("Upload endpoint: http://localhost:%s/upload", config.Port)
+			logger.Printf("Upload endpoint: http://localhost:%s/upload", config.Port)
 		}
 
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Fprintf(os.Stderr, "error listening and serving: %s\n", err)
+			fmt.Fprintf(stderr, "error listening and serving: %s\n", err)
 		}
 	}()
 
@@ -98,19 +108,19 @@ func run() error {
 		defer wg.Done()
 		<-ctx.Done()
 
-		log.Println("Shutting down server...")
+		logger.Println("Shutting down server...")
 
 		// Create shutdown context with timeout
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer shutdownCancel()
 
 		if err := httpServer.Shutdown(shutdownCtx); err != nil {
-			fmt.Fprintf(os.Stderr, "error shutting down http server: %s\n", err)
+			fmt.Fprintf(stderr, "error shutting down http server: %s\n", err)
 		}
 	}()
 
 	wg.Wait()
-	log.Println("Server stopped gracefully")
+	logger.Println("Server stopped gracefully")
 	return nil
 }
 
