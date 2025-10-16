@@ -1,0 +1,254 @@
+# Gofrik CMS - GraphQL Examples
+# Use these queries in GraphiQL at http://localhost:8080/graphql
+
+# ===========================
+# Authentication
+# ===========================
+
+# Register a new user
+mutation Register {
+  register(email: "admin@example.com", password: "securepass123") {
+    id
+    email
+    created_at
+    updated_at
+  }
+}
+
+# Login to get an authentication token
+mutation Login {
+  login(email: "admin@example.com", password: "securepass123") {
+    token
+    user {
+      id
+      email
+      created_at
+    }
+  }
+}
+
+# ===========================
+# Content Types
+# ===========================
+
+# List all content types
+query ListContentTypes {
+  contentTypes {
+    id
+    name
+    slug
+    description
+    schema
+    created_at
+    updated_at
+  }
+}
+
+# Get a specific content type by ID
+query GetContentType {
+  contentType(id: 1) {
+    id
+    name
+    slug
+    description
+    schema
+  }
+}
+
+# Get content type by slug
+query GetContentTypeBySlug {
+  contentTypeBySlug(slug: "blog-post") {
+    id
+    name
+    slug
+    description
+    schema
+  }
+}
+
+# Create a Blog Post content type
+mutation CreateBlogPostType {
+  createContentType(
+    name: "Blog Post"
+    slug: "blog-post"
+    description: "Blog posts for the website"
+    schema: "{\"type\":\"object\",\"properties\":{\"title\":{\"type\":\"string\"},\"slug\":{\"type\":\"string\"},\"body\":{\"type\":\"string\"},\"excerpt\":{\"type\":\"string\"},\"author\":{\"type\":\"string\"},\"featured_image\":{\"type\":\"string\"},\"tags\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"required\":[\"title\",\"body\"]}"
+  ) {
+    id
+    name
+    slug
+    schema
+    created_at
+  }
+}
+
+# Create a Product content type
+mutation CreateProductType {
+  createContentType(
+    name: "Product"
+    slug: "product"
+    description: "E-commerce products"
+    schema: "{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"sku\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"price\":{\"type\":\"number\"},\"currency\":{\"type\":\"string\"},\"inventory\":{\"type\":\"integer\"},\"images\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"required\":[\"name\",\"sku\",\"price\"]}"
+  ) {
+    id
+    name
+    slug
+    schema
+  }
+}
+
+# Update a content type
+mutation UpdateContentType {
+  updateContentType(
+    id: 1
+    name: "Updated Blog Post"
+    description: "Updated description for blog posts"
+  ) {
+    id
+    name
+    slug
+    description
+    updated_at
+  }
+}
+
+# Delete a content type
+mutation DeleteContentType {
+  deleteContentType(id: 1)
+}
+
+# ===========================
+# Content Entries
+# ===========================
+
+# List all content entries for a type
+query ListBlogPosts {
+  content(typeSlug: "blog-post") {
+    id
+    content_type_id
+    data
+    status
+    created_by
+    created_at
+    updated_at
+    published_at
+  }
+}
+
+# Get a specific content entry
+query GetContentEntry {
+  contentEntry(id: 1) {
+    id
+    content_type_id
+    data
+    status
+    created_by
+    created_at
+    updated_at
+    published_at
+  }
+}
+
+# Create a blog post
+mutation CreateBlogPost {
+  createContent(
+    typeSlug: "blog-post"
+    data: "{\"title\":\"Getting Started with Go\",\"slug\":\"getting-started-with-go\",\"body\":\"Go is a statically typed, compiled programming language designed at Google. It's simple, fast, and has excellent support for concurrent programming.\",\"excerpt\":\"Learn the basics of Go programming\",\"author\":\"John Doe\",\"tags\":[\"go\",\"programming\",\"tutorial\"]}"
+    status: "published"
+  ) {
+    id
+    data
+    status
+    created_at
+  }
+}
+
+# Create a draft blog post
+mutation CreateDraftPost {
+  createContent(
+    typeSlug: "blog-post"
+    data: "{\"title\":\"Building a Headless CMS\",\"body\":\"A headless CMS provides content through an API without a built-in frontend...\",\"author\":\"Jane Smith\"}"
+    status: "draft"
+  ) {
+    id
+    data
+    status
+  }
+}
+
+# Create a product
+mutation CreateProduct {
+  createContent(
+    typeSlug: "product"
+    data: "{\"name\":\"Mechanical Keyboard\",\"sku\":\"KB-001\",\"description\":\"High-quality mechanical keyboard with RGB lighting\",\"price\":129.99,\"currency\":\"USD\",\"inventory\":50,\"images\":[\"https://example.com/keyboard-1.jpg\",\"https://example.com/keyboard-2.jpg\"]}"
+    status: "published"
+  ) {
+    id
+    data
+    status
+  }
+}
+
+# Update a blog post
+mutation UpdateBlogPost {
+  updateContent(
+    id: 1
+    data: "{\"title\":\"Getting Started with Go - Updated\",\"body\":\"Updated content here...\"}"
+    status: "published"
+  ) {
+    id
+    data
+    status
+    updated_at
+  }
+}
+
+# Update only the status
+mutation PublishDraft {
+  updateContent(id: 2, status: "published") {
+    id
+    status
+    updated_at
+  }
+}
+
+# Delete a content entry
+mutation DeleteContent {
+  deleteContent(id: 1)
+}
+
+# ===========================
+# Complex Queries
+# ===========================
+
+# Get content type and its entries together
+query ContentTypeWithEntries {
+  blogPostType: contentTypeBySlug(slug: "blog-post") {
+    id
+    name
+    slug
+    schema
+  }
+
+  blogPosts: content(typeSlug: "blog-post") {
+    id
+    data
+    status
+    created_at
+  }
+}
+
+# Multiple content types at once
+query MultipleContentTypes {
+  blogType: contentTypeBySlug(slug: "blog-post") {
+    id
+    name
+    slug
+  }
+
+  productType: contentTypeBySlug(slug: "product") {
+    id
+    name
+    slug
+  }
+}

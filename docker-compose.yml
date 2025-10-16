@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: gofrik_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gofrik}
+      POSTGRES_USER: ${POSTGRES_USER:-gofrik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gofrik}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gofrik}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gofrik_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gofrik_app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}"
+    environment:
+      PORT: ${PORT:-8080}
+      DATABASE_URL: ${DATABASE_URL:-postgres://gofrik:gofrik@postgres:5432/gofrik?sslmode=disable}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - gofrik_network
+    # Uncomment for development with live reload
+    # volumes:
+    #   - .:/app
+    #   - /app/gofrik
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  gofrik_network:
+    driver: bridge

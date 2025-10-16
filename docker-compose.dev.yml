@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: dev
+    volumes:
+      # Mount source code for live reload
+      - .:/app
+      # Prevent overwriting the binary
+      - /app/gofrik
+    environment:
+      # Development environment variables
+      GIN_MODE: debug
+    command: >
+      sh -c "
+        if command -v air >/dev/null 2>&1; then
+          air -c .air.toml
+        else
+          echo 'Air not found, using go run with manual restart required'
+          go run main.go
+        fi
+      "

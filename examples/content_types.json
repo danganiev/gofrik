@@ -1,0 +1,97 @@
+{
+  "blog_post": {
+    "name": "Blog Post",
+    "slug": "blog-post",
+    "description": "Blog posts for your website",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "body": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "featured_image": { "type": "string" },
+        "author": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "published_date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "body"]
+    },
+    "graphql_mutation": "mutation {\n  createContentType(\n    name: \"Blog Post\"\n    slug: \"blog-post\"\n    description: \"Blog posts for your website\"\n    schema: \"{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"title\\\":{\\\"type\\\":\\\"string\\\"},\\\"slug\\\":{\\\"type\\\":\\\"string\\\"},\\\"body\\\":{\\\"type\\\":\\\"string\\\"},\\\"excerpt\\\":{\\\"type\\\":\\\"string\\\"},\\\"featured_image\\\":{\\\"type\\\":\\\"string\\\"},\\\"author\\\":{\\\"type\\\":\\\"string\\\"},\\\"tags\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"}}}}\"\n  ) {\n    id\n    name\n    slug\n  }\n}"
+  },
+  "product": {
+    "name": "Product",
+    "slug": "product",
+    "description": "E-commerce products",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "sku": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "currency": { "type": "string" },
+        "images": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "inventory": { "type": "integer" },
+        "categories": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "specifications": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": ["name", "sku", "price"]
+    },
+    "graphql_mutation": "mutation {\n  createContentType(\n    name: \"Product\"\n    slug: \"product\"\n    description: \"E-commerce products\"\n    schema: \"{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"name\\\":{\\\"type\\\":\\\"string\\\"},\\\"sku\\\":{\\\"type\\\":\\\"string\\\"},\\\"description\\\":{\\\"type\\\":\\\"string\\\"},\\\"price\\\":{\\\"type\\\":\\\"number\\\"},\\\"currency\\\":{\\\"type\\\":\\\"string\\\"},\\\"images\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"}},\\\"inventory\\\":{\\\"type\\\":\\\"integer\\\"}}}\"\n  ) {\n    id\n    name\n    slug\n  }\n}"
+  },
+  "page": {
+    "name": "Page",
+    "slug": "page",
+    "description": "Static pages",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "content": { "type": "string" },
+        "meta_title": { "type": "string" },
+        "meta_description": { "type": "string" },
+        "layout": { "type": "string" }
+      },
+      "required": ["title", "slug", "content"]
+    },
+    "graphql_mutation": "mutation {\n  createContentType(\n    name: \"Page\"\n    slug: \"page\"\n    description: \"Static pages\"\n    schema: \"{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"title\\\":{\\\"type\\\":\\\"string\\\"},\\\"slug\\\":{\\\"type\\\":\\\"string\\\"},\\\"content\\\":{\\\"type\\\":\\\"string\\\"},\\\"meta_title\\\":{\\\"type\\\":\\\"string\\\"},\\\"meta_description\\\":{\\\"type\\\":\\\"string\\\"},\\\"layout\\\":{\\\"type\\\":\\\"string\\\"}}}\"\n  ) {\n    id\n    name\n    slug\n  }\n}"
+  },
+  "author": {
+    "name": "Author",
+    "slug": "author",
+    "description": "Content authors",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "bio": { "type": "string" },
+        "avatar": { "type": "string" },
+        "email": { "type": "string" },
+        "social_links": {
+          "type": "object",
+          "properties": {
+            "twitter": { "type": "string" },
+            "github": { "type": "string" },
+            "linkedin": { "type": "string" }
+          }
+        }
+      },
+      "required": ["name"]
+    },
+    "graphql_mutation": "mutation {\n  createContentType(\n    name: \"Author\"\n    slug: \"author\"\n    description: \"Content authors\"\n    schema: \"{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"name\\\":{\\\"type\\\":\\\"string\\\"},\\\"bio\\\":{\\\"type\\\":\\\"string\\\"},\\\"avatar\\\":{\\\"type\\\":\\\"string\\\"},\\\"email\\\":{\\\"type\\\":\\\"string\\\"},\\\"social_links\\\":{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"twitter\\\":{\\\"type\\\":\\\"string\\\"},\\\"github\\\":{\\\"type\\\":\\\"string\\\"},\\\"linkedin\\\":{\\\"type\\\":\\\"string\\\"}}}}}\"\n  ) {\n    id\n    name\n    slug\n  }\n}"
+  }
+}

@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+CHANGELOG.md
+LICENSE
+DOCKER_DEV.md
+
+# Examples
+examples/
+
+# Development files
+.env
+.env.local
+.air.toml
+docker-compose.yml
+docker-compose.dev.yml
+Dockerfile
+Dockerfile.dev
+
+# Build artifacts
+gofrik
+dist/
+tmp/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite
+
