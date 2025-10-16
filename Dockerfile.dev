@@ -12,12 +12,12 @@ RUN go install github.com/cosmtrek/air@latest
 # Install golangci-lint for linting
 RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s latest
 
-# Copy go mod files first for better caching
+# Copy go mod files and source
 COPY go.mod go.sum ./
-RUN go mod download
-
-# Copy source code (will be overridden by volume in dev mode)
 COPY . .
+
+# Tidy and download dependencies
+RUN go mod tidy && go mod download
 
 # Expose port
 EXPOSE 8080

@@ -7,24 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **S3-Compatible Storage Support** - File upload system supporting AWS S3, Google Cloud Storage, MinIO, DigitalOcean Spaces, Backblaze B2, and any S3-compatible service
+- `/upload` HTTP endpoint for multipart file uploads
+- `internal/storage` package with S3 client integration
+- Image upload with automatic validation (type, size limits)
+- Unique filename generation to prevent collisions
+- Support for custom S3 endpoints (MinIO, DigitalOcean, etc.)
+- CDN integration via `STORAGE_PUBLIC_URL` configuration
+- Storage configuration via environment variables
+- `STORAGE.md` - Comprehensive storage configuration guide
+- `examples/storage_setup.sh` - Interactive storage setup script
+- AWS SDK Go v2 dependencies for S3 operations
+- File type validation (JPEG, PNG, GIF, WebP, SVG)
+- 10MB file size limit for uploads
+
 ### Changed
 
 - **Complete Docker-based development workflow** - All development now happens in Docker
 - Revised Makefile with Docker-first commands (`make up`, `make dev`, `make test`, etc.)
 - Updated README with Docker-based quick start and development instructions
+- Updated README with storage configuration section
 - Simplified prerequisites - only Docker and Make required
-
-### Added
-
-- `Dockerfile.dev` - Development Dockerfile with hot reload and tooling
-- `docker-compose.dev.yml` - Development overrides for docker-compose
-- `.air.toml` - Air configuration for automatic hot reloading
-- `DOCKER_DEV.md` - Comprehensive Docker development guide
-- Development mode with hot reload (`make dev`)
-- Container shell access commands (`make shell`, `make db-shell`)
-- Standalone test command for running tests without starting services
-- Custom command execution (`make exec CMD="..."`, `make run CMD="..."`)
-- Separate log viewing commands (`make logs-app`, `make logs-db`)
+- Enhanced `docker-compose.yml` with storage environment variables
+- Enhanced `docker-compose.dev.yml` with storage configuration
+- Updated main.go to use HTTP mux for multiple endpoints (`/graphql` and `/upload`)
+- Storage is now optional - gracefully disables if not configured
 
 ## [0.1.0] - 2025-10-16
 

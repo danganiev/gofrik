@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   app:
     build:
@@ -14,6 +12,14 @@ services:
     environment:
       # Development environment variables
       GIN_MODE: debug
+      # Storage configuration (optional, inherits from base docker-compose.yml)
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-s3}
+      STORAGE_REGION: ${STORAGE_REGION:-us-east-1}
+      STORAGE_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY_ID:-}
+      STORAGE_SECRET_ACCESS_KEY: ${STORAGE_SECRET_ACCESS_KEY:-}
+      STORAGE_ENDPOINT: ${STORAGE_ENDPOINT:-}
+      STORAGE_PUBLIC_URL: ${STORAGE_PUBLIC_URL:-}
     command: >
       sh -c "
         if command -v air >/dev/null 2>&1; then

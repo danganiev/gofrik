@@ -3,15 +3,15 @@ FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-# Copy go mod files
+# Copy go mod files and source (needed for go mod tidy to see all imports)
 COPY go.mod go.sum ./
-RUN go mod download
-
-# Copy source code
 COPY . .
 
+# Tidy and download dependencies
+RUN go mod tidy && go mod download
+
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o gofrik main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o gofrik .
 
 # Final stage
 FROM alpine:latest
