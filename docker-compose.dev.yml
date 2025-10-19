@@ -6,9 +6,7 @@ services:
       target: dev
     volumes:
       # Mount source code for live reload
-      - .:/app
-      # Prevent overwriting the binary
-      - /app/gofrik
+      - .:/workspace
     environment:
       # Development environment variables
       GIN_MODE: debug
