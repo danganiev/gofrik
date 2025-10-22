@@ -4,6 +4,32 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
+// Pagination info type
+func getPageInfoType() *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name:        "PageInfo",
+		Description: "Information about pagination",
+		Fields: graphql.Fields{
+			"totalCount": &graphql.Field{
+				Type:        graphql.Int,
+				Description: "Total number of items available",
+			},
+			"hasMore": &graphql.Field{
+				Type:        graphql.Boolean,
+				Description: "Whether there are more items available",
+			},
+			"limit": &graphql.Field{
+				Type:        graphql.Int,
+				Description: "Number of items per page",
+			},
+			"offset": &graphql.Field{
+				Type:        graphql.Int,
+				Description: "Current offset",
+			},
+		},
+	})
+}
+
 func (s *Schema) getUserType() *graphql.Object {
 	return graphql.NewObject(graphql.ObjectConfig{
 		Name:        "User",
@@ -83,6 +109,41 @@ func (s *Schema) getContentEntryType() *graphql.Object {
 			},
 			"published_at": &graphql.Field{
 				Type: graphql.DateTime,
+			},
+		},
+	})
+}
+
+// Response types for list queries
+func getContentTypesResponseType(contentTypeType *graphql.Object, pageInfoType *graphql.Object) *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name:        "ContentTypesResponse",
+		Description: "List of content types with pagination info",
+		Fields: graphql.Fields{
+			"items": &graphql.Field{
+				Type:        graphql.NewList(contentTypeType),
+				Description: "List of content types",
+			},
+			"pageInfo": &graphql.Field{
+				Type:        pageInfoType,
+				Description: "Pagination information",
+			},
+		},
+	})
+}
+
+func getContentEntriesResponseType(contentEntryType *graphql.Object, pageInfoType *graphql.Object) *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name:        "ContentEntriesResponse",
+		Description: "List of content entries with pagination info",
+		Fields: graphql.Fields{
+			"items": &graphql.Field{
+				Type:        graphql.NewList(contentEntryType),
+				Description: "List of content entries",
+			},
+			"pageInfo": &graphql.Field{
+				Type:        pageInfoType,
+				Description: "Pagination information",
 			},
 		},
 	})

@@ -1,0 +1,7 @@
+# Cursor Rules
+
+## File Creation Restrictions
+
+- **NEVER create new `.md` (markdown) files** unless explicitly requested by the user
+- Do not proactively create documentation files, README files, or any markdown files
+- Only create `.md` files when the user specifically and explicitly asks for them

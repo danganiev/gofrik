@@ -31,16 +31,61 @@ mutation Login {
 # Content Types
 # ===========================
 
-# List all content types
+# List content types with pagination
 query ListContentTypes {
-  contentTypes {
-    id
-    name
-    slug
-    description
-    schema
-    created_at
-    updated_at
+  contentTypes(
+    limit: 10
+    offset: 0
+    orderBy: "created_at"
+    orderDirection: "DESC"
+  ) {
+    items {
+      id
+      name
+      slug
+      description
+      schema
+      created_at
+      updated_at
+    }
+    pageInfo {
+      totalCount
+      hasMore
+      limit
+      offset
+    }
+  }
+}
+
+# Content types - Page 2
+query ListContentTypesPage2 {
+  contentTypes(limit: 10, offset: 10) {
+    items {
+      id
+      name
+      slug
+    }
+    pageInfo {
+      totalCount
+      hasMore
+      limit
+      offset
+    }
+  }
+}
+
+# Content types - Ordered by name ascending
+query ListContentTypesByName {
+  contentTypes(limit: 20, offset: 0, orderBy: "name", orderDirection: "ASC") {
+    items {
+      id
+      name
+      slug
+    }
+    pageInfo {
+      totalCount
+      hasMore
+    }
   }
 }
 
@@ -121,17 +166,87 @@ mutation DeleteContentType {
 # Content Entries
 # ===========================
 
-# List all content entries for a type
+# List content entries with pagination
 query ListBlogPosts {
-  content(typeSlug: "blog-post") {
-    id
-    content_type_id
-    data
-    status
-    created_by
-    created_at
-    updated_at
-    published_at
+  content(
+    typeSlug: "blog-post"
+    limit: 10
+    offset: 0
+    orderBy: "created_at"
+    orderDirection: "DESC"
+  ) {
+    items {
+      id
+      content_type_id
+      data
+      status
+      created_by
+      created_at
+      updated_at
+      published_at
+    }
+    pageInfo {
+      totalCount
+      hasMore
+      limit
+      offset
+    }
+  }
+}
+
+# Blog posts - Page 2
+query ListBlogPostsPage2 {
+  content(typeSlug: "blog-post", limit: 10, offset: 10) {
+    items {
+      id
+      data
+      status
+      created_at
+    }
+    pageInfo {
+      totalCount
+      hasMore
+      limit
+      offset
+    }
+  }
+}
+
+# Blog posts - Ordered by published date ascending
+query ListBlogPostsByPublishedDate {
+  content(
+    typeSlug: "blog-post"
+    limit: 20
+    offset: 0
+    orderBy: "published_at"
+    orderDirection: "ASC"
+  ) {
+    items {
+      id
+      data
+      status
+      published_at
+    }
+    pageInfo {
+      totalCount
+      hasMore
+    }
+  }
+}
+
+# Get published posts
+query ListPublishedPosts {
+  content(typeSlug: "blog-post", limit: 10, offset: 0) {
+    items {
+      id
+      data
+      status
+      published_at
+    }
+    pageInfo {
+      totalCount
+      hasMore
+    }
   }
 }
 
@@ -230,11 +345,17 @@ query ContentTypeWithEntries {
     schema
   }
 
-  blogPosts: content(typeSlug: "blog-post") {
-    id
-    data
-    status
-    created_at
+  blogPosts: content(typeSlug: "blog-post", limit: 10, offset: 0) {
+    items {
+      id
+      data
+      status
+      created_at
+    }
+    pageInfo {
+      totalCount
+      hasMore
+    }
   }
 }
 

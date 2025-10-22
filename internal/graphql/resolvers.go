@@ -10,18 +10,51 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-// Query Resolvers
+// Helper function to check authentication
+func requireAuth(p graphql.ResolveParams) (*auth.Session, error) {
+	session, ok := p.Context.Value("session").(*auth.Session)
+	if !ok || session == nil {
+		return nil, fmt.Errorf("authentication required")
+	}
+	return session, nil
+}
 
+// Query Resolvers
 func (s *Schema) resolveContentTypes(p graphql.ResolveParams) (interface{}, error) {
-	types, err := models.ListContentTypes(s.db)
+	// Require authentication
+	if _, err := requireAuth(p); err != nil {
+		return nil, err
+	}
+	// Get pagination parameters
+	limit, _ := p.Args["limit"].(int)
+	offset, _ := p.Args["offset"].(int)
+	orderBy, _ := p.Args["orderBy"].(string)
+	orderDirection, _ := p.Args["orderDirection"].(string)
+
+	// Enforce max limit
+	if limit <= 0 || limit > 100 {
+		limit = 10
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	// Get total count
+	totalCount, err := models.CountContentTypes(s.db)
 	if err != nil {
 		return nil, err
 	}
-	
+
+	// Get data
+	types, err := models.ListContentTypes(s.db, limit, offset, orderBy, orderDirection)
+	if err != nil {
+		return nil, err
+	}
+
 	// Convert to map format for GraphQL
-	var result []map[string]interface{}
+	var items []map[string]interface{}
 	for _, ct := range types {
-		result = append(result, map[string]interface{}{
+		items = append(items, map[string]interface{}{
 			"id":          ct.ID,
 			"name":        ct.Name,
 			"slug":        ct.Slug,
@@ -31,11 +64,27 @@ func (s *Schema) resolveContentTypes(p graphql.ResolveParams) (interface{}, erro
 			"updated_at":  ct.UpdatedAt,
 		})
 	}
-	
-	return result, nil
+
+	// Calculate if there are more items
+	hasMore := offset+limit < totalCount
+
+	return map[string]interface{}{
+		"items": items,
+		"pageInfo": map[string]interface{}{
+			"totalCount": totalCount,
+			"hasMore":    hasMore,
+			"limit":      limit,
+			"offset":     offset,
+		},
+	}, nil
 }
 
 func (s *Schema) resolveContentType(p graphql.ResolveParams) (interface{}, error) {
+	// Require authentication
+	if _, err := requireAuth(p); err != nil {
+		return nil, err
+	}
+	
 	id, ok := p.Args["id"].(int)
 	if !ok {
 		return nil, fmt.Errorf("invalid id")
@@ -58,6 +107,11 @@ func (s *Schema) resolveContentType(p graphql.ResolveParams) (interface{}, error
 }
 
 func (s *Schema) resolveContentTypeBySlug(p graphql.ResolveParams) (interface{}, error) {
+	// Require authentication
+	if _, err := requireAuth(p); err != nil {
+		return nil, err
+	}
+	
 	slug, ok := p.Args["slug"].(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid slug")
@@ -84,19 +138,41 @@ func (s *Schema) resolveContent(p graphql.ResolveParams) (interface{}, error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid typeSlug")
 	}
-	
+
+	// Get pagination parameters
+	limit, _ := p.Args["limit"].(int)
+	offset, _ := p.Args["offset"].(int)
+	orderBy, _ := p.Args["orderBy"].(string)
+	orderDirection, _ := p.Args["orderDirection"].(string)
+
+	// Enforce max limit
+	if limit <= 0 || limit > 100 {
+		limit = 10
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	// Get content type
 	ct, err := models.GetContentTypeBySlug(s.db, typeSlug)
 	if err != nil {
 		return nil, err
 	}
-	
-	entries, err := models.ListContentEntries(s.db, ct.ID)
+
+	// Get total count
+	totalCount, err := models.CountContentEntries(s.db, ct.ID)
 	if err != nil {
 		return nil, err
 	}
-	
+
+	// Get data
+	entries, err := models.ListContentEntries(s.db, ct.ID, limit, offset, orderBy, orderDirection)
+	if err != nil {
+		return nil, err
+	}
+
 	// Convert to map format for GraphQL
-	var result []map[string]interface{}
+	var items []map[string]interface{}
 	for _, entry := range entries {
 		item := map[string]interface{}{
 			"id":              entry.ID,
@@ -112,10 +188,21 @@ func (s *Schema) resolveContent(p graphql.ResolveParams) (interface{}, error) {
 		if entry.PublishedAt != nil {
 			item["published_at"] = *entry.PublishedAt
 		}
-		result = append(result, item)
+		items = append(items, item)
 	}
-	
-	return result, nil
+
+	// Calculate if there are more items
+	hasMore := offset+limit < totalCount
+
+	return map[string]interface{}{
+		"items": items,
+		"pageInfo": map[string]interface{}{
+			"totalCount": totalCount,
+			"hasMore":    hasMore,
+			"limit":      limit,
+			"offset":     offset,
+		},
+	}, nil
 }
 
 func (s *Schema) resolveContentEntry(p graphql.ResolveParams) (interface{}, error) {
@@ -148,7 +235,6 @@ func (s *Schema) resolveContentEntry(p graphql.ResolveParams) (interface{}, erro
 }
 
 // Mutation Resolvers
-
 func (s *Schema) resolveRegister(p graphql.ResolveParams) (interface{}, error) {
 	email, _ := p.Args["email"].(string)
 	password, _ := p.Args["password"].(string)
@@ -210,6 +296,11 @@ func (s *Schema) resolveLogin(p graphql.ResolveParams) (interface{}, error) {
 }
 
 func (s *Schema) resolveCreateContentType(p graphql.ResolveParams) (interface{}, error) {
+	// Require authentication
+	if _, err := requireAuth(p); err != nil {
+		return nil, err
+	}
+	
 	name, _ := p.Args["name"].(string)
 	slug, _ := p.Args["slug"].(string)
 	description, _ := p.Args["description"].(string)
@@ -242,6 +333,11 @@ func (s *Schema) resolveCreateContentType(p graphql.ResolveParams) (interface{},
 }
 
 func (s *Schema) resolveUpdateContentType(p graphql.ResolveParams) (interface{}, error) {
+	// Require authentication
+	if _, err := requireAuth(p); err != nil {
+		return nil, err
+	}
+	
 	id, _ := p.Args["id"].(int)
 	
 	// Get existing content type
@@ -293,6 +389,11 @@ func (s *Schema) resolveUpdateContentType(p graphql.ResolveParams) (interface{},
 }
 
 func (s *Schema) resolveDeleteContentType(p graphql.ResolveParams) (interface{}, error) {
+	// Require authentication
+	if _, err := requireAuth(p); err != nil {
+		return nil, err
+	}
+	
 	id, _ := p.Args["id"].(int)
 	
 	if err := models.DeleteContentType(s.db, id); err != nil {

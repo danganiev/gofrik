@@ -52,12 +52,31 @@ func GetContentEntry(db *sql.DB, id int) (*ContentEntry, error) {
 	return &entry, nil
 }
 
-func ListContentEntries(db *sql.DB, contentTypeID int) ([]ContentEntry, error) {
-	rows, err := db.Query(
+func ListContentEntries(db *sql.DB, contentTypeID int, limit, offset int, orderBy, orderDirection string) ([]ContentEntry, error) {
+	// Validate orderBy to prevent SQL injection
+	validOrderFields := map[string]bool{
+		"id":           true,
+		"created_at":   true,
+		"updated_at":   true,
+		"published_at": true,
+		"status":       true,
+	}
+	if !validOrderFields[orderBy] {
+		orderBy = "created_at"
+	}
+
+	// Validate order direction
+	if orderDirection != "ASC" && orderDirection != "DESC" {
+		orderDirection = "DESC"
+	}
+
+	query := fmt.Sprintf(
 		`SELECT id, content_type_id, data, status, created_by, created_at, updated_at, published_at 
-		 FROM content_entries WHERE content_type_id = $1 ORDER BY created_at DESC`,
-		contentTypeID,
+		 FROM content_entries WHERE content_type_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`,
+		orderBy, orderDirection,
 	)
+
+	rows, err := db.Query(query, contentTypeID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list content entries: %w", err)
 	}
@@ -73,6 +92,16 @@ func ListContentEntries(db *sql.DB, contentTypeID int) ([]ContentEntry, error) {
 	}
 
 	return entries, nil
+}
+
+// CountContentEntries returns the total number of content entries for a given content type
+func CountContentEntries(db *sql.DB, contentTypeID int) (int, error) {
+	var count int
+	err := db.QueryRow(`SELECT COUNT(*) FROM content_entries WHERE content_type_id = $1`, contentTypeID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count content entries: %w", err)
+	}
+	return count, nil
 }
 
 func UpdateContentEntry(db *sql.DB, id int, data json.RawMessage, status string) error {

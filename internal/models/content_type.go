@@ -69,11 +69,31 @@ func GetContentTypeBySlug(db *sql.DB, slug string) (*ContentType, error) {
 	return &ct, nil
 }
 
-func ListContentTypes(db *sql.DB) ([]ContentType, error) {
-	rows, err := db.Query(
+func ListContentTypes(db *sql.DB, limit, offset int, orderBy, orderDirection string) ([]ContentType, error) {
+	// Validate orderBy to prevent SQL injection
+	validOrderFields := map[string]bool{
+		"id":         true,
+		"name":       true,
+		"slug":       true,
+		"created_at": true,
+		"updated_at": true,
+	}
+	if !validOrderFields[orderBy] {
+		orderBy = "created_at"
+	}
+
+	// Validate order direction
+	if orderDirection != "ASC" && orderDirection != "DESC" {
+		orderDirection = "DESC"
+	}
+
+	query := fmt.Sprintf(
 		`SELECT id, name, slug, description, schema, created_at, updated_at 
-		 FROM content_types ORDER BY created_at DESC`,
+		 FROM content_types ORDER BY %s %s LIMIT $1 OFFSET $2`,
+		orderBy, orderDirection,
 	)
+
+	rows, err := db.Query(query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list content types: %w", err)
 	}
@@ -89,6 +109,16 @@ func ListContentTypes(db *sql.DB) ([]ContentType, error) {
 	}
 
 	return types, nil
+}
+
+// CountContentTypes returns the total number of content types
+func CountContentTypes(db *sql.DB) (int, error) {
+	var count int
+	err := db.QueryRow(`SELECT COUNT(*) FROM content_types`).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count content types: %w", err)
+	}
+	return count, nil
 }
 
 func UpdateContentType(db *sql.DB, id int, name, description string, schema json.RawMessage) error {

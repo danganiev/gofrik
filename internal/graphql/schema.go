@@ -24,15 +24,40 @@ func NewSchema(db *sql.DB, authMW *auth.Middleware) (*Schema, error) {
 	userType := s.getUserType()
 	contentTypeType := s.getContentTypeType()
 	contentEntryType := s.getContentEntryType()
+	pageInfoType := getPageInfoType()
+	contentTypesResponseType := getContentTypesResponseType(contentTypeType, pageInfoType)
+	contentEntriesResponseType := getContentEntriesResponseType(contentEntryType, pageInfoType)
 	
 	// Define root query
 	rootQuery := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Query",
 		Fields: graphql.Fields{
 			"contentTypes": &graphql.Field{
-				Type:        graphql.NewList(contentTypeType),
-				Description: "Get all content types",
-				Resolve:     s.resolveContentTypes,
+				Type:        contentTypesResponseType,
+				Description: "Get content types",
+				Args: graphql.FieldConfigArgument{
+					"limit": &graphql.ArgumentConfig{
+						Type:         graphql.Int,
+						DefaultValue: 10,
+						Description:  "Number of items per page (default: 10, max: 100)",
+					},
+					"offset": &graphql.ArgumentConfig{
+						Type:         graphql.Int,
+						DefaultValue: 0,
+						Description:  "Number of items to skip (default: 0)",
+					},
+					"orderBy": &graphql.ArgumentConfig{
+						Type:         graphql.String,
+						DefaultValue: "created_at",
+						Description:  "Field to order by (id, name, slug, created_at, updated_at)",
+					},
+					"orderDirection": &graphql.ArgumentConfig{
+						Type:         graphql.String,
+						DefaultValue: "DESC",
+						Description:  "Order direction (ASC or DESC)",
+					},
+				},
+				Resolve: s.resolveContentTypes,
 			},
 			"contentType": &graphql.Field{
 				Type:        contentTypeType,
@@ -55,11 +80,32 @@ func NewSchema(db *sql.DB, authMW *auth.Middleware) (*Schema, error) {
 				Resolve: s.resolveContentTypeBySlug,
 			},
 			"content": &graphql.Field{
-				Type:        graphql.NewList(contentEntryType),
+				Type:        contentEntriesResponseType,
 				Description: "Get content entries by type slug",
 				Args: graphql.FieldConfigArgument{
 					"typeSlug": &graphql.ArgumentConfig{
-						Type: graphql.NewNonNull(graphql.String),
+						Type:        graphql.NewNonNull(graphql.String),
+						Description: "Content type slug",
+					},
+					"limit": &graphql.ArgumentConfig{
+						Type:         graphql.Int,
+						DefaultValue: 10,
+						Description:  "Number of items per page (default: 10, max: 100)",
+					},
+					"offset": &graphql.ArgumentConfig{
+						Type:         graphql.Int,
+						DefaultValue: 0,
+						Description:  "Number of items to skip (default: 0)",
+					},
+					"orderBy": &graphql.ArgumentConfig{
+						Type:         graphql.String,
+						DefaultValue: "created_at",
+						Description:  "Field to order by (id, created_at, updated_at, published_at, status)",
+					},
+					"orderDirection": &graphql.ArgumentConfig{
+						Type:         graphql.String,
+						DefaultValue: "DESC",
+						Description:  "Order direction (ASC or DESC)",
 					},
 				},
 				Resolve: s.resolveContent,
